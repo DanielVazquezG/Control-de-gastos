@@ -66,23 +66,33 @@ async function guardarGasto() {
         return;
     }
 
-    await addDoc(
-        collection(db, "users", currentUser.uid, "gastos"),
-        {
-            fecha,
-            concepto,
-            monto,
-            tipo,
-            categoria,
-            createdAt: Date.now()
-        }
-    );
+    // Agregamos try/catch para atrapar errores en el celular
+    try {
+        await addDoc(
+            collection(db, "users", currentUser.uid, "gastos"),
+            {
+                fecha,
+                concepto,
+                monto,
+                tipo,
+                categoria,
+                createdAt: Date.now()
+            }
+        );
 
-    document.getElementById("concepto").value = "";
-    document.getElementById("monto").value = "";
-    document.getElementById("categoria").value = "";
+        // Si llega aquí, se guardó con éxito
+        alert("¡Gasto guardado correctamente!");
 
-    cargarGastos();
+        document.getElementById("concepto").value = "";
+        document.getElementById("monto").value = "";
+        document.getElementById("categoria").value = "";
+
+        cargarGastos();
+
+    } catch (error) {
+        // Esto hará que tu iPhone te muestre el motivo exacto del fallo
+        alert("Error al guardar: " + error.message);
+    }
 }
 
 function obtenerCicloActual() {
