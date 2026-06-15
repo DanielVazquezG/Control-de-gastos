@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mis Gastos</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    max-width: 500px;
+    margin: 20px auto;
+    padding: 15px;
+    background:#f5f5f5;
+}
+
+.card{
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
+}
+
+input, select, button{
+    width:100%;
+    padding:10px;
+    margin-top:8px;
+    box-sizing:border-box;
+}
+
+button{
+    background:#007AFF;
+    color:white;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+.gasto{
+    border-bottom:1px solid #ddd;
+    padding:8px 0;
+}
+
+.total{
+    font-size:22px;
+    font-weight:bold;
+    color:green;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <h2>Registrar Gasto</h2>
+
+    <input type="number" id="monto" placeholder="Monto">
+
+    <select id="categoria">
+        <option>Comida</option>
+        <option>Gasolina</option>
+        <option>Renta</option>
+        <option>Servicios</option>
+        <option>Ocio</option>
+        <option>Otros</option>
+    </select>
+
+    <input type="text" id="descripcion" placeholder="Descripción">
+
+    <button onclick="guardarGasto()">Guardar</button>
+</div>
+
+<div class="card">
+    <h2>Total del Mes</h2>
+    <div class="total" id="totalMes">$0</div>
+</div>
+
+<div class="card">
+    <h2>Historial</h2>
+    <div id="listaGastos"></div>
+</div>
+
+<script>
+
+let gastos = JSON.parse(localStorage.getItem("gastos")) || [];
+
+function guardarGasto(){
+
+    const monto = parseFloat(document.getElementById("monto").value);
+    const categoria = document.getElementById("categoria").value;
+    const descripcion = document.getElementById("descripcion").value;
+
+    if(!monto){
+        alert("Ingresa un monto");
+        return;
+    }
+
+    gastos.push({
+        fecha:new Date().toLocaleDateString(),
+        monto,
+        categoria,
+        descripcion
+    });
+
+    localStorage.setItem("gastos",JSON.stringify(gastos));
+
+    document.getElementById("monto").value="";
+    document.getElementById("descripcion").value="";
+
+    mostrarGastos();
+}
+
+function mostrarGastos(){
+
+    let html="";
+    let total=0;
+
+    gastos.slice().reverse().forEach(g=>{
+
+        total += g.monto;
+
+        html += `
+        <div class="gasto">
+            <strong>$${g.monto.toFixed(2)}</strong><br>
+            ${g.categoria} - ${g.descripcion}<br>
+            <small>${g.fecha}</small>
+        </div>
+        `;
+    });
+
+    document.getElementById("listaGastos").innerHTML = html;
+    document.getElementById("totalMes").innerHTML =
+        "$" + total.toFixed(2);
+}
+
+mostrarGastos();
+
+</script>
+
+</body>
+</html>
