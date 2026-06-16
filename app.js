@@ -41,7 +41,7 @@ async function login() {
 
         cargarGastos();
     } catch (error) {
-        alert("Error al iniciar sesión: " + error.message);
+        alert(error.message);
     }
 }
 
@@ -62,13 +62,13 @@ async function guardarGasto() {
     const categoria = document.getElementById("categoria").value;
 
     if (!fecha || !concepto || !monto) {
-        alert("Por favor completa los campos obligatorios (Fecha, Concepto y Monto)");
+        alert("Completa los campos");
         return;
     }
 
     try {
         if (id) {
-            // Modo Editar
+            // MODO EDICIÓN
             const docRef = doc(db, "users", currentUser.uid, "gastos", id);
             await updateDoc(docRef, {
                 fecha,
@@ -79,7 +79,7 @@ async function guardarGasto() {
             });
             alert("Gasto actualizado con éxito");
         } else {
-            // Modo Nuevo
+            // MODO NUEVO
             await addDoc(collection(db, "users", currentUser.uid, "gastos"), {
                 fecha,
                 concepto,
@@ -122,11 +122,10 @@ async function cargarGastos() {
     let totalPareja = 0;
 
     try {
-        // Ordena los datos de la fecha más nueva a la más vieja
+        // CORRECCIÓN CRUCIAL: Un solo orderBy evita que Firebase pida crear un índice manual
         const q = query(
             collection(db, "users", currentUser.uid, "gastos"),
-            orderBy("fecha", "desc"),
-            orderBy("createdAt", "desc")
+            orderBy("fecha", "desc")
         );
 
         const snapshot = await getDocs(q);
@@ -144,7 +143,7 @@ async function cargarGastos() {
                 }
             }
 
-            // Construcción de la Tabla Dinámica
+            // Inserción en formato Tabla Dinámica con Fecha, Título, Tipo, Categoría y Monto
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${gasto.fecha}</td>
@@ -158,7 +157,7 @@ async function cargarGastos() {
                 </td>
             `;
 
-            // Configurar botón Editar
+            // Configuración del botón Editar
             tr.querySelector(".btn-editar").addEventListener("click", () => {
                 formTitulo.innerText = "Editar Gasto";
                 gastoIdInput.value = registro.id;
@@ -172,7 +171,7 @@ async function cargarGastos() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
 
-            // Configurar botón Borrar
+            // Configuración del botón Borrar
             tr.querySelector(".btn-borrar").addEventListener("click", async () => {
                 if (confirm(`¿Eliminar "${gasto.concepto}"?`)) {
                     await deleteDoc(doc(db, "users", currentUser.uid, "gastos", registro.id));
@@ -188,7 +187,7 @@ async function cargarGastos() {
         document.getElementById("totalGeneral").innerText = (totalPersonal + totalPareja).toFixed(2);
 
     } catch (error) {
-        alert("Error al cargar los gastos: " + error.message);
+        alert("Error al cargar datos: " + error.message);
     }
 }
 
@@ -217,7 +216,6 @@ async function exportarACSV() {
             return;
         }
 
-        // Encabezados del archivo excel
         let csvContent = "Fecha,Titulo,Pareja o Personal,Categoria,Monto\n";
 
         snapshot.forEach((registro) => {
@@ -228,7 +226,7 @@ async function exportarACSV() {
             csvContent += `${gasto.fecha},${conceptoLimpio},${gasto.tipo},${categoriaLimpia},${gasto.monto}\n`;
         });
 
-        // Forzar descarga compatible con iOS, Android y Excel (Fijando UTF-8 BOM)
+        // Configuración Blob con UTF-8 BOM para forzar descarga directa en iPhone Safari y Excel
         const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
         const nombreArchivo = `Historial_Gastos_${new Date().toISOString().split('T')[0]}.csv`;
 
@@ -245,7 +243,7 @@ async function exportarACSV() {
             window.open(encodeURI("data:text/csv;charset=utf-8,\uFEFF" + csvContent));
         }
     } catch (error) {
-        alert("Error al descargar: " + error.message);
+        alert("Error al descargar CSV: " + error.message);
     }
 }
 
