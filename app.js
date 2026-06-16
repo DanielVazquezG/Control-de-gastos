@@ -202,3 +202,57 @@ async function cargarGastos() {
 
 document.getElementById("fecha").value =
     new Date().toISOString().split("T")[0];
+
+async function exportarAExcel() {
+    try {
+        // 1. Validar que el usuario esté logueado
+        if (!currentUser) {
+            alert("Debes iniciar sesión primero");
+            return;
+        }
+
+        // 2. Consultar todos los gastos de la base de datos
+        const q = query(
+            collection(db, "users", currentUser.uid, "gastos"),
+            orderBy("fecha", "desc")
+        );
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+            alert("No hay datos disponibles para exportar.");
+            return;
+        }
+
+        // 3. Crear las cabeceras de las columnas del Excel
+        let csvContent = "Fecha,Concepto,Monto,Tipo,Categoria\n";
+
+        // 4. Recorrer los registros y construir las filas del archivo
+        snapshot.forEach((registro) => {
+            const gasto = registro.data();
+            
+            // Limpiamos el concepto por si el usuario metió comas que puedan romper las celdas de Excel
+            const conceptoLimpio = gasto.concepto.replace(/,/g, " ");
+            const categoriaLimpia = gasto.categoria ? gasto.categoria.replace(/,/g, " ") : "";
+
+            const fila = `${gasto.fecha},${conceptoLimpio},${gasto.monto},${gasto.tipo},${categoriaLimpia}\n`;
+            csvContent += fila;
+        });
+
+        // 5. Crear el archivo descargable asegurando compatibilidad con caracteres en español (UTF-8 BOM)
+        const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        
+        // 6. Simular el clic para descargar el archivo en el dispositivo
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Historial_Gastos_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = "hidden";
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+    } catch (error) {
+        alert("Error al exportar los datos: " + error.message);
+    }
+}
