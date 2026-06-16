@@ -18,10 +18,12 @@ let currentUser = null;
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const guardarBtn = document.getElementById("guardarBtn");
+const exportarBtn = document.getElementById("exportarBtn");
 
 loginBtn.addEventListener("click", login);
 logoutBtn.addEventListener("click", logout);
 guardarBtn.addEventListener("click", guardarGasto);
+exportarBtn.addEventListener("click", exportarAExcel);
 
 async function login() {
 
