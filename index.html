@@ -23,56 +23,57 @@
     <div id="app" style="display:none;">
 
         <div class="card">
-            <h2>Ciclo Actual</h2>
-
-            <p>Personal: $<span id="totalPersonal">0</span></p>
-
-            <p>Pareja: $<span id="totalPareja">0</span></p>
-
-            <p>Total: $<span id="totalGeneral">0</span></p>
+            <h2>Ciclo Actual (17 al 16)</h2>
+            <p><b>Personal:</b> $<span id="totalPersonal">0.00</span></p>
+            <p><b>Pareja:</b> $<span id="totalPareja">0.00</span></p>
+            <p><b>Total:</b> $<span id="totalGeneral">0.00</span></p>
         </div>
 
         <div class="card">
-
-            <h2>Nuevo Gasto</h2>
+            <h2 id="formTitulo">Nuevo Gasto</h2>
+            <input type="hidden" id="gastoId">
 
             <input type="date" id="fecha">
 
-            <input
-                type="text"
-                id="concepto"
-                placeholder="Concepto">
+            <input type="text" id="concepto" placeholder="Concepto">
 
-            <input
-                type="number"
-                id="monto"
-                placeholder="Monto">
+            <input type="number" id="monto" placeholder="Monto" step="0.01">
 
             <select id="tipo">
                 <option value="personal">Personal</option>
                 <option value="pareja">Pareja</option>
             </select>
 
-            <input
-                type="text"
-                id="categoria"
-                placeholder="Categoría">
+            <input type="text" id="categoria" placeholder="Categoría">
 
-            <button id="guardarBtn">
-                Guardar
-            </button>
-
+            <button id="guardarBtn">Guardar Gasto</button>
+            <button id="cancelarEditBtn" style="display:none; background-color: #757575; color: white;">Cancelar Edición</button>
         </div>
 
-<div class="card">
-    <h2>Historial</h2>
-    <button id="exportarBtn" style="background-color: #2e7d32; color: white; margin-bottom: 15px;">
-        📊 Exportar Historial a Excel (.CSV)
-    </button>
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>Historial</h2>
+                <button id="exportarBtn" style="width: auto; background-color: #2e7d32; color: white; margin: 0; padding: 8px 15px;">
+                    📊 Descargar CSV
+                </button>
+            </div>
 
-    <div id="listaGastos"></div>
-</div>
-
+            <div style="overflow-x: auto;">
+                <table id="tablaGastos">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Título / Concepto</th>
+                            <th>Tipo</th>
+                            <th>Categoría</th>
+                            <th>Monto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaGastos">
+                        </tbody>
+                </table>
+            </div>
         </div>
 
     </div>
