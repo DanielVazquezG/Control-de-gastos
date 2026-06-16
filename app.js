@@ -11,12 +11,11 @@ import {
     doc,
     query,
     orderBy,
-    updateDoc // Añadido para poder editar registros existentes
+    updateDoc
 } from "./firebase.js";
 
 let currentUser = null;
 
-// Elementos de la interfaz
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const guardarBtn = document.getElementById("guardarBtn");
@@ -25,7 +24,6 @@ const cancelarEditBtn = document.getElementById("cancelarEditBtn");
 const formTitulo = document.getElementById("formTitulo");
 const gastoIdInput = document.getElementById("gastoId");
 
-// Eventos
 loginBtn.addEventListener("click", login);
 logoutBtn.addEventListener("click", logout);
 guardarBtn.addEventListener("click", guardarGasto);
@@ -43,7 +41,7 @@ async function login() {
 
         cargarGastos();
     } catch (error) {
-        alert("Error al iniciar sesión: " + error.message);
+        alert(error.message);
     }
 }
 
@@ -55,7 +53,6 @@ async function logout() {
     document.getElementById("app").style.display = "none";
 }
 
-// Guarda un nuevo gasto o actualiza uno existente si está en modo edición
 async function guardarGasto() {
     const id = gastoIdInput.value;
     const fecha = document.getElementById("fecha").value;
@@ -65,15 +62,14 @@ async function guardarGasto() {
     const categoria = document.getElementById("categoria").value;
 
     if (!fecha || !concepto || !monto) {
-        alert("Por favor completa los campos obligatorios (Fecha, Concepto y Monto)");
+        alert("Completa los campos");
         return;
     }
 
     try {
-        // Guardamos todo en la colección global única "gastos_compartidos"
         if (id) {
-            // MODO EDICIÓN: Actualiza el documento existente
-            const docRef = doc(db, "gastos_compartidos", id);
+            // MODO EDICIÓN: Actualiza el documento existente en tu colección personal
+            const docRef = doc(db, "users", currentUser.uid, "gastos", id);
             await updateDoc(docRef, {
                 fecha,
                 concepto,
@@ -84,23 +80,21 @@ async function guardarGasto() {
             alert("Gasto actualizado con éxito");
         } else {
             // MODO NUEVO: Crea un documento nuevo
-            await addDoc(collection(db, "gastos_compartidos"), {
+            await addDoc(collection(db, "users", currentUser.uid, "gastos"), {
                 fecha,
                 concepto,
                 monto,
                 tipo,
                 categoria,
-                createdAt: Date.now(),
-                usuario: currentUser.email // Guardamos referencia de quién lo anotó
+                createdAt: Date.now()
             });
             alert("Gasto guardado con éxito");
         }
 
         limpiarFormulario();
         cargarGastos();
-
     } catch (error) {
-        alert("Error al procesar el gasto: " + error.message);
+        alert("Error: " + error.message);
     }
 }
 
@@ -117,6 +111,7 @@ function obtenerCicloActual() {
         inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 17);
         fin = new Date(hoy.getFullYear(), hoy.getMonth(), 16);
     }
+
     return { inicio, fin };
 }
 
@@ -130,7 +125,7 @@ async function cargarGastos() {
     try {
         // Consulta ordenada del más nuevo al más viejo usando la Fecha del gasto
         const q = query(
-            collection(db, "gastos_compartidos"),
+            collection(db, "users", currentUser.uid, "gastos"),
             orderBy("fecha", "desc"),
             orderBy("createdAt", "desc")
         );
@@ -142,7 +137,6 @@ async function cargarGastos() {
             const gasto = registro.data();
             const fechaGasto = new Date(gasto.fecha + "T00:00:00");
 
-            // Filtrado del ciclo de facturación (Días 17 al 16)
             if (fechaGasto >= ciclo.inicio && fechaGasto <= ciclo.fin) {
                 if (gasto.tipo === "personal") {
                     totalPersonal += gasto.monto;
@@ -151,7 +145,7 @@ async function cargarGastos() {
                 }
             }
 
-            // Crear la fila de la tabla
+            // Crear la fila de la tabla requerida
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${gasto.fecha}</td>
@@ -160,12 +154,12 @@ async function cargarGastos() {
                 <td>${gasto.categoria || "-"}</td>
                 <td>$${gasto.monto.toFixed(2)}</td>
                 <td>
-                    <button class="btn-editar" data-id="${registro.id}">Editar</button>
-                    <button class="btn-borrar" data-id="${registro.id}">Borrar</button>
+                    <button class="btn-editar">Editar</button>
+                    <button class="btn-borrar">Borrar</button>
                 </td>
             `;
 
-            // Configurar botón de Editar
+            // Acción Editar
             tr.querySelector(".btn-editar").addEventListener("click", () => {
                 formTitulo.innerText = "Editar Gasto";
                 gastoIdInput.value = registro.id;
@@ -176,13 +170,13 @@ async function cargarGastos() {
                 document.getElementById("categoria").value = gasto.categoria || "";
                 guardarBtn.innerText = "Actualizar Gasto";
                 cancelarEditBtn.style.display = "block";
-                window.scrollTo({ top: 0, behavior: 'smooth' }); // Sube la pantalla al formulario
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
 
-            // Configurar botón de Borrar
+            // Acción Borrar
             tr.querySelector(".btn-borrar").addEventListener("click", async () => {
-                if (confirm(`¿Estás seguro de que quieres eliminar "${gasto.concepto}"?`)) {
-                    await deleteDoc(doc(db, "gastos_compartidos", registro.id));
+                if (confirm(`¿Eliminar "${gasto.concepto}"?`)) {
+                    await deleteDoc(doc(db, "users", currentUser.uid, "gastos", registro.id));
                     cargarGastos();
                 }
             });
@@ -190,13 +184,12 @@ async function cargarGastos() {
             lista.appendChild(tr);
         });
 
-        // Actualizar tarjetas de totales en la interfaz
         document.getElementById("totalPersonal").innerText = totalPersonal.toFixed(2);
         document.getElementById("totalPareja").innerText = totalPareja.toFixed(2);
         document.getElementById("totalGeneral").innerText = (totalPersonal + totalPareja).toFixed(2);
 
     } catch (error) {
-        alert("Error al cargar los gastos: " + error.message);
+        alert("Error al cargar datos: " + error.message);
     }
 }
 
@@ -212,55 +205,49 @@ function limpiarFormulario() {
     cancelarEditBtn.style.display = "none";
 }
 
-// Descarga en formato .CSV compatible al 100% con Excel y navegadores móviles (iOS/Android)
 async function exportarACSV() {
     try {
-        const q = query(collection(db, "gastos_compartidos"), orderBy("fecha", "desc"));
+        const q = query(
+            collection(db, "users", currentUser.uid, "gastos"),
+            orderBy("fecha", "desc")
+        );
         const snapshot = await getDocs(q);
 
         if (snapshot.empty) {
-            alert("No hay ningún dato registrado para exportar.");
+            alert("No hay datos para exportar.");
             return;
         }
 
-        // Definición de las cabeceras del CSV
-        let csvContent = "Fecha,Concepto,Monto,Tipo,Categoria\n";
+        // Estructura de columnas para el .CSV
+        let csvContent = "Fecha,Titulo,Pareja o Personal,Categoria,Monto\n";
 
         snapshot.forEach((registro) => {
             const gasto = registro.data();
-            // Reemplazamos comas y saltos de línea para evitar romper celdas en Excel
             const conceptoLimpio = gasto.concepto.replace(/,/g, " ").replace(/\n/g, " ");
             const categoriaLimpia = (gasto.categoria || "").replace(/,/g, " ").replace(/\n/g, " ");
             
-            csvContent += `${gasto.fecha},${conceptoLimpio},${gasto.monto},${gasto.tipo},${categoriaLimpia}\n`;
+            csvContent += `${gasto.fecha},${conceptoLimpio},${gasto.tipo},${categoriaLimpia},${gasto.monto}\n`;
         });
 
-        // El secreto para iPhone/Safari y Excel: Usar el prefijo UTF-8 BOM ("\uFEFF") y un tipo Blob correcto
+        // Configuración especial para forzar la descarga en navegadores móviles/escritorio y añadir compatibilidad Excel (UTF-8 BOM)
         const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
         const nombreArchivo = `Historial_Gastos_${new Date().toISOString().split('T')[0]}.csv`;
 
-        // Soporte universal de descarga automática
-        if (navigator.msSaveBlob) { 
-            navigator.msSaveBlob(blob, nombreArchivo);
+        const link = document.createElement("a");
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", nombreArchivo);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         } else {
-            const link = document.createElement("a");
-            if (link.download !== undefined) {
-                const url = URL.createObjectURL(blob);
-                link.setAttribute("href", url);
-                link.setAttribute("download", nombreArchivo);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            } else {
-                // Alternativa extrema para navegadores muy viejos o configuraciones estrictas
-                window.open(encodeURI("data:text/csv;charset=utf-8,\uFEFF" + csvContent));
-            }
+            window.open(encodeURI("data:text/csv;charset=utf-8,\uFEFF" + csvContent));
         }
     } catch (error) {
-        alert("Error al generar el archivo: " + error.message);
+        alert("Error al descargar: " + error.message);
     }
 }
 
-// Inicializar la fecha por defecto al cargar el archivo
 document.getElementById("fecha").value = new Date().toISOString().split("T")[0];
