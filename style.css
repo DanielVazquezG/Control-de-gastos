@@ -18,9 +18,7 @@ body{
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
-input,
-select,
-button{
+input, select, button{
     width:100%;
     padding:10px;
     margin-top:10px;
@@ -49,7 +47,6 @@ button:hover {
     background-color: #dc3545;
 }
 
-/* Estilos de la Tabla */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -67,7 +64,6 @@ th {
     font-weight: bold;
 }
 
-/* Botones de acción dentro de la tabla */
 .btn-editar {
     background-color: #ffc107;
     color: black;
