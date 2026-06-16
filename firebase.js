@@ -15,7 +15,8 @@ import {
     deleteDoc,
     doc,
     query,
-    orderBy
+    orderBy,
+    updateDoc
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -42,5 +43,6 @@ export {
     deleteDoc,
     doc,
     query,
-    orderBy
+    orderBy,
+    updateDoc
 };
