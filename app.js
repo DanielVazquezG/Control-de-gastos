@@ -122,17 +122,35 @@ async function cargarGastos() {
     let totalPareja = 0;
 
     try {
-        // CORRECCIÓN CRUCIAL: Un solo orderBy evita que Firebase pida crear un índice manual
+        // SOLUCIÓN DEFINITIVA: Quitamos por completo el orderBy de Firebase para EVITAR el error de índice
         const q = query(
-            collection(db, "users", currentUser.uid, "gastos"),
-            orderBy("fecha", "desc")
+            collection(db, "users", currentUser.uid, "gastos")
         );
 
         const snapshot = await getDocs(q);
         const ciclo = obtenerCicloActual();
-
+        
+        // Creamos un arreglo temporal para guardar y ordenar los datos con JavaScript
+        const listaOrdenada = [];
         snapshot.forEach((registro) => {
-            const gasto = registro.data();
+            listaOrdenada.push({
+                id: registro.id,
+                data: registro.data()
+            });
+        });
+
+        // Ordenamos aquí en el dispositivo: del más nuevo al más viejo por fecha
+        listaOrdenada.sort((a, b) => {
+            // Compara las fechas (ej. "2026-06-15" vs "2026-06-16")
+            if (a.data.fecha > b.data.fecha) return -1;
+            if (a.data.fecha < b.data.fecha) return 1;
+            return 0;
+        });
+
+        // Ahora procesamos la lista ya ordenada para meterla a la tabla
+        listaOrdenada.forEach((item) => {
+            const gasto = item.data;
+            const idRegistro = item.id;
             const fechaGasto = new Date(gasto.fecha + "T00:00:00");
 
             if (fechaGasto >= ciclo.inicio && fechaGasto <= ciclo.fin) {
@@ -143,7 +161,6 @@ async function cargarGastos() {
                 }
             }
 
-            // Inserción en formato Tabla Dinámica con Fecha, Título, Tipo, Categoría y Monto
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${gasto.fecha}</td>
@@ -157,10 +174,10 @@ async function cargarGastos() {
                 </td>
             `;
 
-            // Configuración del botón Editar
+            // Acción Editar
             tr.querySelector(".btn-editar").addEventListener("click", () => {
                 formTitulo.innerText = "Editar Gasto";
-                gastoIdInput.value = registro.id;
+                gastoIdInput.value = idRegistro;
                 document.getElementById("fecha").value = gasto.fecha;
                 document.getElementById("concepto").value = gasto.concepto;
                 document.getElementById("monto").value = gasto.monto;
@@ -171,10 +188,10 @@ async function cargarGastos() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
 
-            // Configuración del botón Borrar
+            // Acción Borrar
             tr.querySelector(".btn-borrar").addEventListener("click", async () => {
                 if (confirm(`¿Eliminar "${gasto.concepto}"?`)) {
-                    await deleteDoc(doc(db, "users", currentUser.uid, "gastos", registro.id));
+                    await deleteDoc(doc(db, "users", currentUser.uid, "gastos", idRegistro));
                     cargarGastos();
                 }
             });
