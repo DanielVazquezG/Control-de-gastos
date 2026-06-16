@@ -41,7 +41,7 @@ async function login() {
 
         cargarGastos();
     } catch (error) {
-        alert(error.message);
+        alert("Error al iniciar sesión: " + error.message);
     }
 }
 
@@ -62,13 +62,13 @@ async function guardarGasto() {
     const categoria = document.getElementById("categoria").value;
 
     if (!fecha || !concepto || !monto) {
-        alert("Completa los campos");
+        alert("Por favor completa los campos obligatorios (Fecha, Concepto y Monto)");
         return;
     }
 
     try {
         if (id) {
-            // MODO EDICIÓN: Actualiza el documento existente en tu colección personal
+            // Modo Editar
             const docRef = doc(db, "users", currentUser.uid, "gastos", id);
             await updateDoc(docRef, {
                 fecha,
@@ -79,7 +79,7 @@ async function guardarGasto() {
             });
             alert("Gasto actualizado con éxito");
         } else {
-            // MODO NUEVO: Crea un documento nuevo
+            // Modo Nuevo
             await addDoc(collection(db, "users", currentUser.uid, "gastos"), {
                 fecha,
                 concepto,
@@ -94,7 +94,7 @@ async function guardarGasto() {
         limpiarFormulario();
         cargarGastos();
     } catch (error) {
-        alert("Error: " + error.message);
+        alert("Error al guardar: " + error.message);
     }
 }
 
@@ -111,7 +111,6 @@ function obtenerCicloActual() {
         inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 17);
         fin = new Date(hoy.getFullYear(), hoy.getMonth(), 16);
     }
-
     return { inicio, fin };
 }
 
@@ -123,7 +122,7 @@ async function cargarGastos() {
     let totalPareja = 0;
 
     try {
-        // Consulta ordenada del más nuevo al más viejo usando la Fecha del gasto
+        // Ordena los datos de la fecha más nueva a la más vieja
         const q = query(
             collection(db, "users", currentUser.uid, "gastos"),
             orderBy("fecha", "desc"),
@@ -145,7 +144,7 @@ async function cargarGastos() {
                 }
             }
 
-            // Crear la fila de la tabla requerida
+            // Construcción de la Tabla Dinámica
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${gasto.fecha}</td>
@@ -159,7 +158,7 @@ async function cargarGastos() {
                 </td>
             `;
 
-            // Acción Editar
+            // Configurar botón Editar
             tr.querySelector(".btn-editar").addEventListener("click", () => {
                 formTitulo.innerText = "Editar Gasto";
                 gastoIdInput.value = registro.id;
@@ -173,7 +172,7 @@ async function cargarGastos() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
 
-            // Acción Borrar
+            // Configurar botón Borrar
             tr.querySelector(".btn-borrar").addEventListener("click", async () => {
                 if (confirm(`¿Eliminar "${gasto.concepto}"?`)) {
                     await deleteDoc(doc(db, "users", currentUser.uid, "gastos", registro.id));
@@ -189,7 +188,7 @@ async function cargarGastos() {
         document.getElementById("totalGeneral").innerText = (totalPersonal + totalPareja).toFixed(2);
 
     } catch (error) {
-        alert("Error al cargar datos: " + error.message);
+        alert("Error al cargar los gastos: " + error.message);
     }
 }
 
@@ -218,7 +217,7 @@ async function exportarACSV() {
             return;
         }
 
-        // Estructura de columnas para el .CSV
+        // Encabezados del archivo excel
         let csvContent = "Fecha,Titulo,Pareja o Personal,Categoria,Monto\n";
 
         snapshot.forEach((registro) => {
@@ -229,7 +228,7 @@ async function exportarACSV() {
             csvContent += `${gasto.fecha},${conceptoLimpio},${gasto.tipo},${categoriaLimpia},${gasto.monto}\n`;
         });
 
-        // Configuración especial para forzar la descarga en navegadores móviles/escritorio y añadir compatibilidad Excel (UTF-8 BOM)
+        // Forzar descarga compatible con iOS, Android y Excel (Fijando UTF-8 BOM)
         const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
         const nombreArchivo = `Historial_Gastos_${new Date().toISOString().split('T')[0]}.csv`;
 
