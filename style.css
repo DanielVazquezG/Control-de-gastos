@@ -1,31 +1,102 @@
-body{
-    font-family: Arial, sans-serif;
-    background:#f4f4f4;
-    margin:0;
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f4f7f6;
+    margin: 0;
+    color: #333;
 }
 
-.container{
-    max-width:700px;
-    margin:auto;
-    padding:20px;
+.container {
+    max-width: 800px;
+    margin: auto;
+    padding: 15px;
 }
 
-.card{
-    background:white;
-    padding:15px;
-    margin-bottom:15px;
-    border-radius:10px;
+.card {
+    background: white;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 
-input,
-select,
-button{
-    width:100%;
-    padding:10px;
-    margin-top:10px;
-    box-sizing:border-box;
+input, select, button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px; /* Evita que iOS haga zoom automático */
 }
 
-button{
-    cursor:pointer;
+input:focus, select:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+#loginBtn {
+    background-color: #4285F4;
+    margin-top: 50px;
+}
+
+#logoutBtn {
+    background-color: #dc3545;
+}
+
+/* Estilos específicos para la Tabla */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #666;
+}
+
+tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Botones de acción dentro de la tabla */
+.btn-editar {
+    background-color: #ffc107;
+    color: #212529;
+    padding: 4px 8px;
+    font-size: 12px;
+    width: auto;
+    display: inline-block;
+    margin: 2px;
+}
+
+.btn-borrar {
+    background-color: #dc3545;
+    color: white;
+    padding: 4px 8px;
+    font-size: 12px;
+    width: auto;
+    display: inline-block;
+    margin: 2px;
 }
